@@ -1,5 +1,7 @@
 # Select
 
+## Northwind
+
 * Wybierz nazwy i adresy wszystkich klientów
 * Wybierz nazwiska i numery telefonów pracowników
 * Wybierz nazwy i ceny produktów
@@ -54,3 +56,5 @@ oddzielone przecinkiem)
 ```sql
 SELECT CompanyName, Phone + isnull(', ' + Fax, '') as Kontakt from Suppliers;
 ```
+
+## Library
