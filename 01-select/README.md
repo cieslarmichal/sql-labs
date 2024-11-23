@@ -58,3 +58,60 @@ SELECT CompanyName, Phone + isnull(', ' + Fax, '') as Kontakt from Suppliers;
 ```
 
 ## Library
+
+* Napisz polecenie, które wybiera tytuł o numerze 10
+
+```sql
+select title from title where title_no=10;
+```
+
+* Napisz polecenie select, za pomocą którego uzyskasz numer książki (nr tyułu) i autora dla wszystkich książek, których autorem jest Charles Dickens lub Jane Austen
+
+```sql
+select title_no, author from title where author in ('Charles Dickens', 'Jane Austen');
+```
+
+* Napisz polecenie, które wybiera numer tytułu i tytuł dla wszystkich książek, których tytuły zawierających słowo 'adventure'
+
+```sql
+select title_no, title from title where title like '%adventure%';
+```
+
+* Napisz polecenie, które wybiera numer czytelnika, oraz zapłaconą karę dla wszystkich książek, tore zostały zwrócone w listopadzie 2001
+
+```sql
+select member_no, fine_paid from loanhist where YEAR(in_date) = 2001 and MONTH (in_date) = 11 and fine_paid is not null;
+```
+
+* Napisz polecenie, które wybiera wszystkie unikalne pary miast i stanów z tablicy adult.
+
+```sql
+select DISTINCT city, state from adult;
+```
+
+* Napisz polecenie, które wybiera wszystkie tytuły z tablicy title i wyświetla je w porządku alfabetycznym.
+
+```sql
+select title from title order by title;
+```
+
+* Napisz polecenie, które wybiera numer członka biblioteki, isbn książki i wartość naliczonej kary dla wszystkich wypożyczeń, dla których naliczono karę 
+stwórz kolumnę wyliczeniową (double_fine) zawierającą podwojoną wartość kolumny fine_assessed
+stwórz kolumnę o nazwie diff, zawierającą różnicę wartości w kolumnach double_fine i fine_assessed wybierz wiersze dla których wartość w kolumnie diff jest większa niż 3
+
+```sql
+select member_no, isbn,fine_assessed, fine_assessed * 2 as double_fine, fine_assessed * 2  - fine_assessed as diff from loanhist
+WHERE fine_assessed * 2  - fine_assessed > 3
+```
+
+* Napisz polecenie, które generuje pojedynczą kolumnę: first_name + middel_initial + dwie litery z last_name dla nazwiska Anderson
+
+```sql
+select LOWER(firstname + middleinitial + SUBSTRING(lastname, 0, 3)) as email_name from [member] WHERE lastname = 'Anderson';
+```
+
+* Napisz polecenie, które wybiera title i title_no z tablicy title w formacie: The title is: title, title_no
+
+```sql
+select 'The title is: ' + title +', title number ' + CAST(title_no as varchar) from title;
+```
