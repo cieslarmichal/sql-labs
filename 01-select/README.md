@@ -95,7 +95,7 @@ select DISTINCT city, state from adult;
 select title from title order by title;
 ```
 
-* Napisz polecenie, które wybiera numer członka biblioteki, isbn książki i wartość naliczonej kary dla wszystkich wypożyczeń, dla których naliczono karę 
+* Napisz polecenie, które wybiera numer członka biblioteki, isbn książki i wartość naliczonej kary dla wszystkich wypożyczeń, dla których naliczono karę
 stwórz kolumnę wyliczeniową (double_fine) zawierającą podwojoną wartość kolumny fine_assessed
 stwórz kolumnę o nazwie diff, zawierającą różnicę wartości w kolumnach double_fine i fine_assessed wybierz wiersze dla których wartość w kolumnie diff jest większa niż 3
 
