@@ -98,10 +98,33 @@ select OrderID, SUM(UnitPrice * Quantity * (1-Discount)) as wartosc from [Order 
 ```
 
 * Dla każdego pracownika podaj liczbę obsługiwanych przez niego zamówień
+
+```sql
+select EmployeeID, COUNT(OrderID) from Orders group by EmployeeID order by 2 desc;
+```
+
 * Dla każdego spedytora/przewoźnika podaj łączną wartość "opłat za przesyłkę" dla
 przewożonych przez niego zamówień
-* Dla każdego spedytora/przewoźnika podaj łączną wartość "opłat za przesyłkę"
-przewożonych przez niego zamówień w latach o 1996 do 1997
-* Dla każdego pracownika podaj liczbę obsługiwanych przez niego zamówień z
-podziałem na lata i miesiące
+
+```sql
+select ShipVia, SUM(Freight) from Orders group by ShipVia order by 2 desc;
+```
+
+* Dla każdego spedytora/przewoźnika podaj łączną wartość "opłat za przesyłkę" przewożonych przez niego zamówień w latach o 1996 do 1997
+
+```sql
+select ShipVia, SUM(Freight) from Orders where YEAR(ShippedDate) BETWEEN 1996 AND 1997 group by ShipVia order by 2 desc;
+```
+
+* Dla każdego pracownika podaj liczbę obsługiwanych przez niego zamówień z podziałem na lata i miesiące
+
+```sql
+select EmployeeID, YEAR(OrderDate) as year, MONTH(OrderDate) as month, COUNT(OrderID) as orders from Orders
+group by EmployeeID, YEAR(OrderDate), MONTH(OrderDate) order by 1, 2, 3;
+```
+
 * Dla każdej kategorii podaj maksymalną i minimalną cenę produktu w tej kategorii
+
+```sql
+select CategoryID, MIN(UnitPrice) as minprice, MAX(UnitPrice) as maxprice from Products group by CategoryID order by 3 desc;
+```
