@@ -85,7 +85,7 @@ select ProductName, UnitPrice from Products where UnitPrice between 10 and 20 or
 * Wybierz zamówienia złożone w 1997 roku
   
 ```sql
-select * from Orders where YEAR(OrderDate) = 1997;
+select * from Orders where year(OrderDate) = 1997;
 ```
 
 * Napisz instrukcję select tak aby wybrać numer zlecenia, datę zamówienia, numer klienta dla wszystkich niezrealizowanych jeszcze zleceń, dla których krajem odbiorcy jest Argentyna
@@ -112,7 +112,7 @@ select CompanyName, Country from Customers where Country in ('Spain', 'France') 
 miesiąca, a w ramach danego miesiąca rosnąco według ceny za przesyłkę
 
 ```sql
-select * from Orders where YEAR(OrderDate) = 1997 order by MONTH(OrderDate) desc, Freight;
+select * from Orders where year(OrderDate) = 1997 order by month(OrderDate) desc, Freight;
 ```
 
 * Napisz polecenie, które oblicza wartość każdej pozycji zamówienia o numerze 10250
@@ -126,7 +126,7 @@ zawierającą nr telefonu i nr faksu w formacie (numer telefonu i faksu mają by
 oddzielone przecinkiem)
 
 ```sql
-SELECT CompanyName, Phone + isnull(', ' + Fax, '') as Kontakt from Suppliers;
+select CompanyName, Phone + isnull(', ' + Fax, '') as Kontakt from Suppliers;
 ```
 
 ## Library
@@ -152,7 +152,7 @@ select title_no, title from title where title like '%adventure%';
 * Napisz polecenie, które wybiera numer czytelnika, oraz zapłaconą karę dla wszystkich książek, tore zostały zwrócone w listopadzie 2001
 
 ```sql
-select member_no, fine_paid from loanhist where YEAR(in_date) = 2001 and MONTH (in_date) = 11 and fine_paid is not null;
+select member_no, fine_paid from loanhist where year(in_date) = 2001 and month (in_date) = 11 and fine_paid is not null;
 ```
 
 * Napisz polecenie, które wybiera wszystkie unikalne pary miast i stanów z tablicy adult.
@@ -173,13 +173,13 @@ stwórz kolumnę o nazwie diff, zawierającą różnicę wartości w kolumnach d
 
 ```sql
 select member_no, isbn,fine_assessed, fine_assessed * 2 as double_fine, fine_assessed * 2  - fine_assessed as diff from loanhist
-WHERE fine_assessed * 2  - fine_assessed > 3
+where fine_assessed * 2  - fine_assessed > 3
 ```
 
 * Napisz polecenie, które generuje pojedynczą kolumnę: first_name + middel_initial + dwie litery z last_name dla nazwiska Anderson
 
 ```sql
-select LOWER(firstname + middleinitial + SUBSTRING(lastname, 0, 3)) as email_name from [member] WHERE lastname = 'Anderson';
+select LOWER(firstname + middleinitial + SUBSTRING(lastname, 0, 3)) as email_name from [member] where lastname = 'Anderson';
 ```
 
 * Napisz polecenie, które wybiera title i title_no z tablicy title w formacie: The title is: title, title_no

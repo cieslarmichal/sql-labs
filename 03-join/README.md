@@ -5,7 +5,7 @@
 * Wybierz nazwy i ceny produktów (baza northwind) o cenie jednostkowej pomiędzy 20.00 a 30.00, dla każdego produktu podaj dane adresowe dostawcy
 
 ```sql
-select ProductName, Address, City, Country from Products p left outer join Suppliers s on p.SupplierID = s.SupplierID where UnitPrice BETWEEN 20 AND 30;
+select ProductName, Address, City, Country from Products p left outer join Suppliers s on p.SupplierID = s.SupplierID where UnitPrice between 20 and 30;
 ```
 
 * Wybierz nazwy produktów oraz inf. o stanie magazynu dla produktów dostarczanych przez firmę 'Tokyo Traders'
@@ -18,7 +18,7 @@ select ProductName, UnitsInStock from Products p join Suppliers s on p.SupplierI
 
 ```sql
 select c.CustomerID, Address, City, PostalCode, Country from Customers c 
-left outer join Orders o on c.CustomerID = o.CustomerID and YEAR(OrderDate) = 1997 where o.OrderID is NULL;
+left outer join Orders o on c.CustomerID = o.CustomerID and year(OrderDate) = 1997 where o.OrderID is NULL;
 ```
 
 * Wybierz nazwy i numery telefonów dostawców, dostarczających produkty, których aktualnie nie ma w magazynie
@@ -44,8 +44,8 @@ select DISTINCT title from loan l join title t on l.title_no = t.title_no;
 * Podaj informacje o karach zapłaconych za przetrzymywanie książki o tytule ‘Tao Teh King’. Interesuje nas data oddania książki, ile dni była przetrzymywana i jaką zapłacono karę
 
 ```sql
-select fine_paid, fine_assessed ,in_date, due_date, DATEDIFF(day, due_date, in_date) as kept_days
-from loanhist l join title t on l.title_no = t.title_no where t.title = 'Tao Teh King' and DATEDIFF(day, due_date, in_date) > 0;
+select fine_paid, fine_assessed ,in_date, due_date, datediff(day, due_date, in_date) as kept_days
+from loanhist l join title t on l.title_no = t.title_no where t.title = 'Tao Teh King' and datediff(day, due_date, in_date) > 0;
 ```
 
 * Napisz polecenie które podaje listę książek (mumery ISBN) zarezerwowanych przez osobę o nazwisku: Stephen A. Graff
@@ -69,7 +69,7 @@ select suppliers.companyname, shippers.companyname from suppliers cross join shi
 select p.ProductName, p.UnitPrice from Products p
 join Categories c on p.CategoryID = c.CategoryID
 join Suppliers s on p.SupplierID  = s.SupplierID
-where p.UnitPrice BETWEEN 20 AND 30 and c.CategoryName = 'Meat/Poultry';
+where p.UnitPrice between 20 and 30 and c.CategoryName = 'Meat/Poultry';
 ```
 
 * Wybierz nazwy i ceny produktów z kategorii 'Confections' dla każdego produktu podaj nazwę dostawcy.
@@ -87,7 +87,7 @@ where c.CategoryName = 'Confections';
 select distinct c.CompanyName, c.Phone from Orders o 
 join Shippers s on o.ShipVia = s.ShipperID 
 join Customers c on o.CustomerID = c.CustomerID 
-where s.CompanyName = 'United Package' and YEAR(o.ShippedDate) = 1997;
+where s.CompanyName = 'United Package' and year(o.ShippedDate) = 1997;
 ```
 
 * Który ze spedytorów był najaktywniejszy w 1997 roku, podaj nazwę tego spedytora
@@ -152,9 +152,9 @@ kategorii 'Confections'
 * Dla każdego klienta podaj liczbe zlożonych przez niego zamówień w 1997
 
 ```sql
-select c.CustomerID, c.CompanyName, COUNT(o.OrderID) as orders
+select c.CustomerID, c.CompanyName, count(o.OrderID) as orders
 from Customers c
-left join Orders o on c.CustomerID = o.CustomerID and YEAR(o.OrderDate) = 1997
+left join Orders o on c.CustomerID = o.CustomerID and year(o.OrderDate) = 1997
 group by c.CustomerID, c.CompanyName;
 ```
 
@@ -177,30 +177,30 @@ join adult a on j.adult_member_no = a.member_no;
 * Podaj listę członków biblioteki mieszkających w Arizonie (AZ) mają więcej niż dwoje dzieci zapisanych do biblioteki
   
 ```sql
-select a.member_no, max(m.firstname), max(m.lastname), COUNT(*) from juvenile j 
+select a.member_no, max(m.firstname), max(m.lastname), count(*) from juvenile j 
 join adult a on j.adult_member_no = a.member_no
 join [member] m on a.member_no = m.member_no
 where a.state = 'AZ'
 group by a.member_no
-having COUNT(*) > 2;
+having count(*) > 2;
 ```
 
 * Podaj listę członków biblioteki mieszkających w Arizonie (AZ) którzy mają więcej niż dwoje dzieci zapisanych do biblioteki oraz takich którzy mieszkają w Kaliforni (CA) i mają więcej niż troje dzieci zapisanych do biblioteki
   
 ```sql
-select a.member_no, min(m.firstname), min(m.lastname), COUNT(*) as children from juvenile j 
+select a.member_no, min(m.firstname), min(m.lastname), count(*) as children from juvenile j 
 join adult a on j.adult_member_no = a.member_no
 join [member] m on a.member_no = m.member_no
 where a.state = 'AZ'
 group by a.member_no
-having COUNT(*) > 2
+having count(*) > 2
 union
-select a.member_no, min(m.firstname), min(m.lastname), COUNT(*) as children from juvenile j 
+select a.member_no, min(m.firstname), min(m.lastname), count(*) as children from juvenile j 
 join adult a on j.adult_member_no = a.member_no
 join [member] m on a.member_no = m.member_no
 where a.state = 'CA'
 group by a.member_no
-having COUNT(*) > 3;
+having count(*) > 3;
 ```
 
 ```sql
