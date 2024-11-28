@@ -279,3 +279,48 @@ select customerid from orders where year(orderdate) = 1997
 except
 select customerid from orders where year(orderdate) = 1996
 ```
+
+* Dla każdego zamówienia podaj łączną wartość tego zamówienia (wartość zamówienia wraz z opłatą za przesyłkę), nazwę klienta oraz imie i nazwisko pracownika obsługującego zamówienie.
+
+```sql
+select o.OrderID, c.CompanyName as Customer, e.FirstName + ' ' + e.LastName as Employee, sum((1 - od.Discount) * od.UnitPrice * od.Quantity + o.Freight) as payment
+from [Order Details] od
+join Orders o on od.OrderID = o.OrderID 
+join Customers c on o.CustomerID = c.CustomerID
+join Employees e on o.EmployeeID = e.EmployeeID
+group by o.OrderID, c.CustomerID, c.CompanyName, e.FirstName, e.LastName
+```
+
+* Podaj nazwy przewoźników, którzy w marcu 1998 przewozili produkty z kategorii 'Meat/Poultry'
+
+```sql
+select distinct s.CompanyName from Orders o 
+join [Order Details] od on o.OrderID = od.OrderID and year(o.ShippedDate) = 1998 and month(o.ShippedDate) = 3
+join Products p on od.ProductID = p.ProductID 
+join Categories c on p.CategoryID = c.CategoryID and c.CategoryName = 'Meat/Poultry'
+join Shippers s on o.ShipVia = s.ShipperID
+order by 1;
+```
+
+* Podaj nazwy przewoźników, którzy w marcu 1997r nie przewozili produktów z kategorii 'Meat/Poultry'
+
+```sql
+select s.CompanyName from Orders o 
+join [Order Details] od on o.OrderID = od.OrderID and year(o.ShippedDate) = 1997 and month(o.ShippedDate) = 3
+join Products p on od.ProductID = p.ProductID 
+join Categories c on p.CategoryID = c.CategoryID and c.CategoryName = 'Meat/Poultry'
+right join Shippers s on o.ShipVia = s.ShipperID
+where o.OrderID is null;
+```
+
+* Dla każdego przewoźnika podaj wartość produktów z kategorii 'Meat/Poultry' które ten przewoźnik przewiózł w marcu 1997
+
+```sql
+select s.CompanyName, sum(od.UnitPrice * od.Quantity) as [shipped value] from Orders o 
+join [Order Details] od on o.OrderID = od.OrderID and year(o.ShippedDate) = 1997 and month(o.ShippedDate) = 3
+join Products p on od.ProductID = p.ProductID 
+join Categories c on p.CategoryID = c.CategoryID and c.CategoryName = 'Meat/Poultry'
+right join Shippers s on o.ShipVia = s.ShipperID
+group by s.ShipperID, s.CompanyName 
+order by 2 desc;
+```
