@@ -283,7 +283,7 @@ select customerid from orders where year(orderdate) = 1996
 * Dla każdego zamówienia podaj łączną wartość tego zamówienia (wartość zamówienia wraz z opłatą za przesyłkę), nazwę klienta oraz imie i nazwisko pracownika obsługującego zamówienie.
 
 ```sql
-select o.OrderID, c.CompanyName as Customer, e.FirstName + ' ' + e.LastName as Employee, sum((1 - od.Discount) * od.UnitPrice * od.Quantity + o.Freight) as payment
+select o.OrderID, c.CompanyName as Customer, e.FirstName + ' ' + e.LastName as Employee, sum((1 - od.Discount) * od.UnitPrice * od.Quantity) + min(o.Freight) as payment
 from [Order Details] od
 join Orders o on od.OrderID = o.OrderID 
 join Customers c on o.CustomerID = c.CustomerID
@@ -323,4 +323,91 @@ join Categories c on p.CategoryID = c.CategoryID and c.CategoryName = 'Meat/Poul
 right join Shippers s on o.ShipVia = s.ShipperID
 group by s.ShipperID, s.CompanyName 
 order by 2 desc;
+```
+
+* Dla każdej kategorii produktu, podaj łączną liczbę zamówionych przez klientów jednostek towarów z tej kategorii.
+  
+```sql
+select c.CategoryName, sum(od.Quantity) as quantity from Categories c 
+join Products p on c.CategoryID = p.CategoryID
+join [Order Details] od on p.ProductID = od.ProductID
+group by c.CategoryID, c.CategoryName
+order by 2 desc;
+```
+
+* Dla każdej kategorii produktu, podaj łączną liczbę zamówionych w 1997r jednostek towarów z tej kategorii.
+
+```sql
+select c.CategoryName, sum(od.Quantity) as quantity from Categories c 
+join Products p on c.CategoryID = p.CategoryID
+join [Order Details] od on p.ProductID = od.ProductID
+join Orders o on od.OrderID = o.OrderID and year(o.OrderDate) = 1997
+group by c.CategoryID, c.CategoryName
+order by 2 desc;
+```
+
+* Dla każdej kategorii produktu, podaj łączną wartość zamówionych towarów z tej kategorii
+
+```sql
+select c.CategoryName, sum(od.Quantity * od.UnitPrice) as value from Categories c 
+join Products p on c.CategoryID = p.CategoryID
+join [Order Details] od on p.ProductID = od.ProductID
+join Orders o on od.OrderID = o.OrderID
+group by c.CategoryID, c.CategoryName
+order by 2 desc;
+```
+
+* Dla każdego przewoźnika podaj liczbę zamówień które przewieźli w 1997r
+
+```sql
+select s.CompanyName, count(*) as orders from Shippers s
+join Orders o on s.ShipperID = o.ShipVia
+group by s.ShipperID, s.CompanyName
+order by 2 desc;
+```
+
+* Który z przewoźników był najaktywniejszy (przewiózł największą liczbę zamówień) w 1997r, podaj nazwę tego przewoźnika
+
+```sql
+select top 1 s.CompanyName, count(*) as orders from Shippers s
+join Orders o on s.ShipperID = o.ShipVia and year(o.ShippedDate) = 1997
+group by s.ShipperID, s.CompanyName
+order by 2 desc;
+```
+
+* Dla każdego przewoźnika podaj łączną wartość "opłat za przesyłkę" przewożonych przez niego zamówień od '1998-05-03' do '1998-05-29'
+
+```sql
+select s.CompanyName, sum(o.Freight) as [freight sum] from Shippers s
+left join Orders o on s.ShipperID = o.ShipVia and OrderDate between '1998-05-03' and '1998-05-29'
+group by s.ShipperID, s.CompanyName
+order by 2 desc;
+```
+
+* Dla każdego pracownika (imię i nazwisko) podaj łączną wartość zamówień obsłużonych przez tego pracownika w maju 1996
+
+```sql
+select e.FirstName, e.LastName, count(o.OrderID) as orders from Employees e
+left join Orders o on e.EmployeeID = o.EmployeeID and year(o.OrderDate) = 1996 and month(o.OrderDate) = 5
+group by e.EmployeeID, e.FirstName, e.LastName
+order by 3 desc;
+```
+
+* Który z pracowników obsłużył największą liczbę zamówień w 1996r, podaj imię i nazwisko takiego pracownika
+
+```sql
+select top 1 e.FirstName, e.LastName, count(*) as orders from Employees e
+join Orders o on e.EmployeeID = o.EmployeeID and year(o.OrderDate) = 1996
+group by e.EmployeeID, e.FirstName, e.LastName
+order by 3 desc;
+```
+
+* Który z pracowników był najaktywniejszy (obsłużył zamówienia o największej wartości) w 1996r, podaj imię i nazwisko takiego pracownika
+
+```sql
+select top 1 e.FirstName, e.LastName, sum((1-od.Discount) * od.UnitPrice * od.Quantity) + min(o.Freight) from Employees e
+join Orders o on e.EmployeeID = o.EmployeeID and year(o.OrderDate) = 1996
+join [Order Details] od on o.OrderID = od.OrderID
+group by e.EmployeeID, e.FirstName, e.LastName
+order by 3 desc;
 ```
