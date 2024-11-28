@@ -24,7 +24,7 @@ left outer join Orders o on c.CustomerID = o.CustomerID and year(OrderDate) = 19
 * Wybierz nazwy i numery telefonów dostawców, dostarczających produkty, których aktualnie nie ma w magazynie
 
 ```sql
-select CompanyName, Phone from Suppliers s join Products p  on s.SupplierID =p.SupplierID where p.UnitsInStock = 0;
+select CompanyName, Phone from Suppliers s join Products p  on s.SupplierID = p.SupplierID where p.UnitsInStock = 0;
 ```
 
 ## Library
@@ -93,6 +93,11 @@ where s.CompanyName = 'United Package' and year(o.ShippedDate) = 1997;
 * Który ze spedytorów był najaktywniejszy w 1997 roku, podaj nazwę tego spedytora
   
 ```sql
+select top 1 s.CompanyName as Shipper, count(*) as orders
+from Orders o 
+join Shippers s on o.ShipVia = s.ShipperID
+group by s.ShipperID, s.CompanyName
+order by 2 desc;
 ```
 
 * Dla każdego zamówienia podaj wartość zamówionych produktów. Zbiór wynikowy
@@ -100,6 +105,12 @@ powinien zawierać nr zamówienia, datę zamówienia, nazwę klienta oraz warto�
 zamówionych produktów
 
 ```sql
+select o.OrderID, c.CompanyName as Customer, o.OrderDate, sum(UnitPrice * Quantity * (1-Discount)) as [order value]
+from [Order Details] od
+join Orders o on od.OrderID = o.OrderID
+join Customers c on o.CustomerID = c.CustomerID
+group by o.OrderID, c.CompanyName, o.OrderDate
+order by 3;
 ```
 
 * Dla każdego zamówienia podaj jego pełną wartość (wliczając opłatę za przesyłkę).
@@ -107,6 +118,12 @@ Zbiór wynikowy powinien zawierać nr zamówienia, datę zamówienia, nazwę kli
 oraz pełną wartość zamówienia
 
 ```sql
+select o.OrderID, c.CompanyName as Customer, o.OrderDate, sum(UnitPrice * Quantity * (1-Discount)) + min(Freight) as [order value with freight]
+from [Order Details] od
+join Orders o on od.OrderID = o.OrderID
+join Customers c on o.CustomerID = c.CustomerID
+group by o.OrderID, c.CompanyName, o.OrderDate
+order by 4 desc;
 ```
 
 * Wybierz nazwy i numery telefonów klientów, którzy kupowali produkty z kategorii 'Confections'
@@ -147,6 +164,12 @@ where o.orderid is null
 kategorii 'Confections'
 
 ```sql
+select c.CustomerID, c.CompanyName, c.Phone  
+from  orders o join [order details] od on od.orderid = o.orderid and year(o.OrderDate) = 1997
+join products p on od.productid = p.productid
+join categories ca on p.categoryid = ca.categoryid and categoryname = 'confections'
+right join Customers c on c.customerid = o.customerid
+where o.OrderID is null
 ```
 
 * Dla każdego klienta podaj liczbe zlożonych przez niego zamówień w 1997
