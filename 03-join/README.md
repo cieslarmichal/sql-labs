@@ -137,11 +137,11 @@ inner join categories ca on p.categoryid = ca.categoryid
 where categoryname = 'confections'
 ```
 
-* Wybierz nazwy i numery telefonów klientów, którzy nie kupowali produktów z kategorii ‘Confectionsʼ
+* Wybierz nazwy i numery telefonów klientów, którzy nie kupowali produktów z kategorii 'Confections'
   
 ```sql
 select c.customerid, companyname
-from  orders o inner join [order details] od on od.orderid = o.orderid
+from orders o inner join [order details] od on od.orderid = o.orderid
 inner join products p on od.productid = p.productid
 inner join categories ca on p.categoryid = ca.categoryid and categoryname = 'confections'
 right join Customers c on c.customerid = o.customerid
@@ -150,7 +150,7 @@ where o.orderid is null
 
 ```sql
 select  c.customerid, companyname
-from  customers c left join
+from customers c left join
 (
 orders o inner join [order details] od on od.orderid = o.orderid
 inner join products p on od.productid = p.productid
@@ -165,7 +165,7 @@ kategorii 'Confections'
 
 ```sql
 select c.CustomerID, c.CompanyName, c.Phone  
-from  orders o join [order details] od on od.orderid = o.orderid and year(o.OrderDate) = 1997
+from orders o join [order details] od on od.orderid = o.orderid and year(o.OrderDate) = 1997
 join products p on od.productid = p.productid
 join categories ca on p.categoryid = ca.categoryid and categoryname = 'confections'
 right join Customers c on c.customerid = o.customerid
@@ -240,18 +240,18 @@ having count(*) > 2 and state = 'AZ' or count(*) > 3 and state = 'CA';
 * Napisz polecenie, które wyświetla pracowników oraz ich podwładnych
 
 ```sql
-select chef.EmployeeID as SupervisorID, chef.LastName as Supervisor, emp.EmployeeID, emp.LastName as Employee
-from Employees chef
-join Employees emp on emp.ReportsTo = chef.EmployeeID
+select s.FirstName + ' ' + s.LastName as Supervisor,  e.FirstName + ' ' + e.LastName as Employee
+from Employees s
+join Employees e on e.ReportsTo = s.EmployeeID
 ```
 
 * Napisz polecenie, które wyświetla pracowników, którzy nie mają podwładnych
   
 ```sql
-select chef.EmployeeID as SupervisorID, chef.LastName as Supervisor, emp.EmployeeID, emp.LastName as Employee
-from Employees chef
-left join Employees emp on emp.ReportsTo = chef.EmployeeID
-where emp.EmployeeID is null;
+select s.FirstName + ' ' + s.LastName as Superior
+from Employees s
+left join Employees e on e.ReportsTo = s.EmployeeID
+where e.EmployeeID is null;
 ```
 
 * Łączna lista pracowników i klientów
@@ -410,4 +410,52 @@ join Orders o on e.EmployeeID = o.EmployeeID and year(o.OrderDate) = 1996
 join [Order Details] od on o.OrderID = od.OrderID
 group by e.EmployeeID, e.FirstName, e.LastName
 order by 3 desc;
+```
+
+* Dla każdego pracownika, który ma podwładnych podaj łączną wartość obsłużonych zamówień
+
+```sql
+select distinct s.FirstName + ' ' + s.LastName as Superviser, sum((1-od.Discount)*od.UnitPrice*od.Quantity) as [orders value]
+from Orders o
+join [Order Details] od on o.OrderID = od.OrderID
+join Employees s on o.EmployeeID = s.EmployeeID
+join Employees e on s.EmployeeID = e.ReportsTo
+group by s.EmployeeID, s.FirstName, s.LastName, e.EmployeeID
+```
+
+* Dla każdego pracownika, który nie ma podwładnych podaj łączną wartość obsłużonych zamówień
+
+```sql
+select s.FirstName + ' ' + s.LastName as Superviser, sum((1-od.Discount)*od.UnitPrice*od.Quantity) as [orders value]
+from Orders o
+join [Order Details] od on o.OrderID = od.OrderID
+join Employees s on o.EmployeeID = s.EmployeeID
+left join Employees e on s.EmployeeID = e.ReportsTo
+where e.EmployeeID is null
+group by s.EmployeeID, s.FirstName, s.LastName
+```
+
+* Napisz polecenie, które wyświetla klientów z Francji którzy w 1998r złożyli więcej niż dwa zamówienia
+oraz klientów z Niemiec którzy w 1997r złożyli więcej niż trzy zamówienia
+
+```sql
+select c.CustomerID, c.CompanyName, count(*) as orders from Orders o
+join Customers c on o.CustomerID = c.CustomerID
+where c.Country = 'France' and year(o.OrderDate) = 1998 or c.Country = 'Germany' and year(o.OrderDate) = 1997
+group by c.CustomerID, c.CompanyName, c.Country
+having count(*) > 2 and c.Country = 'France' or count(*) > 3 and c.Country = 'Germany'
+```
+
+```sql
+select c.CustomerID, c.CompanyName, count(*) as orders from Orders o
+join Customers c on o.CustomerID = c.CustomerID
+where Country = 'France' and year(o.OrderDate) = 1998
+group by c.CustomerID, c.CompanyName
+having count(*) > 2
+union
+select c.CustomerID, c.CompanyName, count(*) as orders from Orders o
+join Customers c on o.CustomerID = c.CustomerID
+where Country = 'Germany' and year(o.OrderDate) = 1997
+group by c.CustomerID, c.CompanyName
+having count(*) > 3
 ```
