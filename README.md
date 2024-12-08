@@ -13,3 +13,7 @@ SQL labs at AGH University of Science and Technology in Krakow.
 ## Lab 3
 
 * [Join](03-join/README.md)
+
+## Lab 4
+
+* [Subquery](04-subquery/README.md)
