@@ -56,47 +56,143 @@ order by od.ProductID;
 * Dla każdego klienta podaj łączną wartość jego zamówień (bez opłaty za przesyłkę) z 1996r
   
 ```sql
+select c.CustomerID, c.CompanyName, sum(od.unitprice * od.quantity * (1 - od.discount)) as [orders value] 
+from Customers c 
+left join Orders o on o.CustomerID = c.CustomerID and year(o.OrderDate) = 1996 
+left join [Order Details] od on od.OrderID = o.OrderID 
+group by c.CustomerID, c.CompanyName 
+order by 3 desc;
+```
+
+```sql
+select c.CustomerID, c.CompanyName, (select sum(od.unitprice * od.quantity * (1 - od.discount))
+from Orders o
+join [Order Details] od on od.OrderID = o.OrderID
+where o.CustomerID = c.CustomerID and year(o.OrderDate) = 1996 
+) as [orders value] 
+from Customers c
+order by 3 desc;
 ```
 
 * Dla każdego klienta podaj łączną wartość jego zamówień (uwzględnij opłatę za przesyłkę) z 1996r
 
 ```sql
+select c.CustomerID, c.CompanyName,
+       sum(od.unitprice * od.quantity * (1 - od.discount)) +
+  (select sum(o2.Freight)
+   from Orders o2
+   where o2.CustomerID = c.CustomerID
+     and year(o2.OrderDate) = 1996) as [orders value]
+from Customers c
+left join Orders o on o.CustomerID = c.CustomerID
+and year(o.OrderDate) = 1996
+left join [Order Details] od on od.OrderID = o.OrderID
+group by c.CustomerID,
+         c.CompanyName
+order by 3 desc
+```
+
+```sql
+select c.CustomerID, c.CompanyName,
+  (select sum(od.unitprice * od.quantity * (1 - od.discount))
+   from Orders o
+   join [Order Details] od on od.OrderID = o.OrderID
+   where o.CustomerID = c.CustomerID
+     and year(o.OrderDate) = 1996) +
+  (select sum(o2.Freight)
+   from Orders o2
+   where o2.CustomerID = c.CustomerID
+     and year(o2.OrderDate) = 1996) as [orders value]
+from Customers c
+order by 3 desc;
 ```
 
 * Dla każdego klienta podaj maksymalną wartość zamówienia złożonego przez tego klienta w 1997
 
 ```sql
+select t.CustomerID, max(t.OrderValue) from (select c.CustomerID, o.OrderID, sum(od.unitprice * od.quantity * (1 - od.discount)) as OrderValue
+from Customers c 
+left join Orders o on c.CustomerID = o.CustomerID and year(o.OrderDate) = 1997
+left join [Order Details] od on o.OrderID = od.OrderID
+group by c.CustomerID, o.OrderID) as t
+group by t.CustomerID
+order by 1;
 ```
 
-* Czy są jacyś klienci którzy nie złożyli żadnego zamówienia w 1997 roku, jeśli tak to
-pokaż ich dane adresowe
+* Klienci którzy nie złożyli żadnego zamówienia w 1997 roku
 
 ```sql
+select c.CustomerID, c.CompanyName from Customers c 
+where c.CustomerID not in (select o.CustomerID from Orders o where year(o.OrderDate) = 1997)
+```
+
+```sql
+select c.CustomerID, c.CompanyName from Customers c 
+where not exists (select * from Orders o where c.CustomerID = o.CustomerID and year(o.OrderDate) = 1997)
+```
+
+```sql
+
+select c.CustomerID, c.CompanyName from Customers c 
+left join Orders o on c.CustomerID = o.CustomerID and year(o.OrderDate) = 1997
+where o.OrderID is null
 ```
 
 * Wybierz nazwy i numery telefonów klientów , którym w 1997 roku przesyłki dostarczała firma United Package.
 
 ```sql
+select c.CompanyName, c.Phone from Customers c 
+where c.CustomerID  in 
+(select o.CustomerID from Orders o join Shippers s on o.ShipVia = s.ShipperID and s.CompanyName = 'United Package' and year(o.OrderDate) = 1997)
+
 ```
 
 * Wybierz nazwy i numery telefonów klientów , którym w 1997 roku przesyłek nie dostarczała firma United Package.
 
 ```sql
+select c.CompanyName, c.Phone from Customers c 
+where c.CustomerID not in 
+(select o.CustomerID from Orders o join Shippers s on o.ShipVia = s.ShipperID and s.CompanyName = 'United Package' and year(o.OrderDate) = 1997)
 ```
 
 * Wybierz nazwy i numery telefonów klientów, którzy kupowali produkty z kategorii Confections.
 
 ```sql
+select c.CompanyName, c.Phone from Customers c 
+where c.CustomerID in 
+(
+select o.CustomerID from Orders o
+join [Order Details] od on o.OrderID = od.OrderID
+join Products p on od.ProductID = p.ProductID
+join Categories cat on cat.CategoryID = p.CategoryID and cat.CategoryName = 'Confections'
+);
 ```
 
 * Wybierz nazwy i numery telefonów klientów, którzy nie kupowali produktów z kategorii Confections.
 
 ```sql
+select c.CompanyName, c.Phone from Customers c 
+where c.CustomerID not in 
+(
+select o.CustomerID from Orders o
+join [Order Details] od on o.OrderID = od.OrderID
+join Products p on od.ProductID = p.ProductID
+join Categories cat on cat.CategoryID = p.CategoryID and cat.CategoryName = 'Confections'
+);
 ```
 
 * Wybierz nazwy i numery telefonów klientów, którzy w 1997r nie kupowali produktów z kategorii Confections.
 
 ```sql
+select c.CompanyName, c.Phone from Customers c 
+where c.CustomerID not in 
+(
+select o.CustomerID from Orders o
+join [Order Details] od on o.OrderID = od.OrderID
+join Products p on od.ProductID = p.ProductID
+join Categories cat on cat.CategoryID = p.CategoryID and cat.CategoryName = 'Confections'
+where year(o.OrderDate) = 1997
+);
 ```
 
 * Podaj wszystkie produkty których cena jest mniejsza niż średnia cena produktu
