@@ -198,27 +198,56 @@ where year(o.OrderDate) = 1997
 * Podaj wszystkie produkty których cena jest mniejsza niż średnia cena produktu
 
 ```sql
+select p.ProductID, p.ProductName, p.UnitPrice
+from Products p
+where p.UnitPrice < (select avg(p2.UnitPrice) from Products p2);
 ```
 
 * Podaj wszystkie produkty których cena jest mniejsza niż średnia cena produktu danej kategorii
 
 ```sql
+select p.ProductID, p.CategoryID, p.ProductName, p.UnitPrice
+from Products p
+where p.UnitPrice < (select avg(p2.UnitPrice) from Products p2 where p2.CategoryID = p.CategoryID);
 ```
 
 * Dla każdego produktu podaj jego nazwę, cenę, średnią cenę wszystkich produktów oraz różnicę między ceną produktu a średnią ceną wszystkich produktów
 
 ```sql
+with av as (
+  select avg(p2.UnitPrice) as avg from Products p2
+)
+
+select p.ProductID, p.ProductName, p.UnitPrice, av.avg as avg, p.UnitPrice - av.avg as diff
+from Products p, av;
+
 ```
 
 * Dla każdego produktu podaj jego nazwę kategorii, nazwę produktu, cenę, średnią cenę wszystkich produktów danej kategorii
 oraz różnicę między ceną produktu a średnią ceną wszystkich produktów danej kategorii
 
 ```sql
+with avc as (
+ select c.CategoryID, c.CategoryName, avg(p2.UnitPrice) as avg
+ from Products p2
+ join Categories c on p2.CategoryID = c.CategoryID
+ group by c.CategoryID, c.CategoryName
+)
+
+select p.ProductName, avc.CategoryName, p.UnitPrice, avc.avg as avg, p.UnitPrice - avc.avg as diff
+from Products p
+join avc on p.CategoryID = avc.CategoryID
 ```
 
 * Podaj produkty kupowane przez więcej niż jednego klienta
 
 ```sql
+select ProductName, count(*) as boughtby from (select distinct p.ProductID, p.ProductName, o.CustomerID from Products p 
+join [Order Details] od on p.ProductID = od.ProductID
+join Orders o on o.OrderID = od.OrderID) cp
+group by ProductID, ProductName
+having count(*) > 1
+order by 2
 ```
 
 * Podaj produkty kupowane w 1997r przez więcej niż jednego klienta
