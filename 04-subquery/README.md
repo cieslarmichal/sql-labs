@@ -132,7 +132,6 @@ where not exists (select * from Orders o where c.CustomerID = o.CustomerID and y
 ```
 
 ```sql
-
 select c.CustomerID, c.CompanyName from Customers c 
 left join Orders o on c.CustomerID = o.CustomerID and year(o.OrderDate) = 1997
 where o.OrderID is null
@@ -144,7 +143,6 @@ where o.OrderID is null
 select c.CompanyName, c.Phone from Customers c 
 where c.CustomerID  in 
 (select o.CustomerID from Orders o join Shippers s on o.ShipVia = s.ShipperID and s.CompanyName = 'United Package' and year(o.OrderDate) = 1997)
-
 ```
 
 * Wybierz nazwy i numery telefonów klientów , którym w 1997 roku przesyłek nie dostarczała firma United Package.
@@ -220,7 +218,6 @@ with av as (
 
 select p.ProductID, p.ProductName, p.UnitPrice, av.avg as avg, p.UnitPrice - av.avg as diff
 from Products p, av;
-
 ```
 
 * Dla każdego produktu podaj jego nazwę kategorii, nazwę produktu, cenę, średnią cenę wszystkich produktów danej kategorii
@@ -242,9 +239,12 @@ join avc on p.CategoryID = avc.CategoryID
 * Podaj produkty kupowane przez więcej niż jednego klienta
 
 ```sql
-select ProductName, count(*) as boughtby from (select distinct p.ProductID, p.ProductName, o.CustomerID from Products p 
-join [Order Details] od on p.ProductID = od.ProductID
-join Orders o on o.OrderID = od.OrderID) cp
+select ProductName, count(*) as boughtby
+from (
+  select distinct p.ProductID, p.ProductName, o.CustomerID from Products p 
+  join [Order Details] od on p.ProductID = od.ProductID
+  join Orders o on o.OrderID = od.OrderID
+  ) cp
 group by ProductID, ProductName
 having count(*) > 1
 order by 2
@@ -253,32 +253,105 @@ order by 2
 * Podaj produkty kupowane w 1997r przez więcej niż jednego klienta
 
 ```sql
+select ProductName, count(*) as boughtby
+from (
+  select distinct p.ProductID, p.ProductName, o.CustomerID from Products p 
+  join [Order Details] od on p.ProductID = od.ProductID
+  join Orders o on o.OrderID = od.OrderID and year(o.OrderDate) = 1997
+) cp
+group by ProductID, ProductName
+having count(*) > 1
+order by 2
 ```
 
 * Podaj nazwy klientów którzy w 1997r kupili co najmniej dwa różne produkty z kategorii 'Confections'
 
 ```sql
+select CompanyName, count(*) as ConfectionsProducts
+from (
+  select distinct p.ProductID, p.ProductName, c2.CustomerID, c2.CompanyName from Products p
+  join [Order Details] od on p.ProductID = od.ProductID
+  join Orders o on o.OrderID = od.OrderID and year(o.OrderDate) = 1997
+  join Categories c on p.CategoryID = c.CategoryID and c.CategoryName = 'Confections'
+  join Customers c2 on o.CustomerID = c2.CustomerID
+) cp
+group by CustomerID, CompanyName
+having count(*) > 1
+order by 2 desc
 ```
 
 * Dla każdego pracownika (imię i nazwisko) podaj łączną wartość zamówień obsłużonych przez tego pracownika (z ceną za przesyłkę)
 
 ```sql
+with OrdersValues as (
+select o.OrderID, o.EmployeeID, min(o.Freight) + sum(od.UnitPrice * od.Quantity * (1-od.Discount)) as OrderValue
+from [Order Details] od
+join Orders o on od.OrderID = o.OrderID
+group by o.OrderID, o.EmployeeID
+)
+
+select e.FirstName, e.LastName, sum(ov.OrderValue) as OrdersValue
+from Employees e
+join OrdersValues ov on e.EmployeeID = ov.EmployeeID
+group by e.EmployeeID, e.FirstName, e.LastName
+order by 3 desc;
 ```
 
-* Który z pracowników był najaktywniejszy (obsłużył zamówienia o największej wartości) w 1997r, podaj imię i nazwisko takiego pracownika
+* Który z pracowników był najaktywniejszy (obsłużył zamówienia o największej wartości) w 1997r, podaj imię i nazwisko takiego pracownika 
 oraz datę ostatnio obsłużonego zamówienia
 
 ```sql
+with OrdersValues as (
+select o.OrderID, o.EmployeeID, min(o.Freight) + sum(od.UnitPrice * od.Quantity * (1-od.Discount)) as OrderValue
+from [Order Details] od
+join Orders o on od.OrderID = o.OrderID and year(o.OrderDate) = 1997
+group by o.OrderID, o.EmployeeID
+)
+
+select e.FirstName, e.LastName, sum(ov.OrderValue) as OrdersValue,
+(select top 1 o.OrderDate from Orders o where o.EmployeeID = e.EmployeeID order by o.OrderDate desc) as LastOrderDate
+from Employees e
+join OrdersValues ov on e.EmployeeID = ov.EmployeeID
+group by e.EmployeeID, e.FirstName, e.LastName
+order by 3 desc;
 ```
 
 * Najaktywniejszy pracownik który ma podwładnych
 
 ```sql
+with OrdersValues as (
+select o.OrderID, o.EmployeeID, min(o.Freight) + sum(od.UnitPrice * od.Quantity * (1-od.Discount)) as OrderValue
+from [Order Details] od
+join Orders o on od.OrderID = o.OrderID and year(o.OrderDate) = 1997
+group by o.OrderID, o.EmployeeID
+)
+
+select e.FirstName, e.LastName, sum(ov.OrderValue) as OrdersValue,
+(select top 1 o.OrderDate from Orders o where o.EmployeeID = e.EmployeeID order by o.OrderDate desc) as LastOrderDate
+from Employees e
+join OrdersValues ov on e.EmployeeID = ov.EmployeeID
+where e.EmployeeID in (select distinct s.EmployeeID from Employees e join Employees s on e.ReportsTo = s.EmployeeID)
+group by e.EmployeeID, e.FirstName, e.LastName
+order by 3 desc;
 ```
 
 * Najaktywniejszy pracownik który nie ma podwładnych
 
 ```sql
+with OrdersValues as (
+select o.OrderID, o.EmployeeID, min(o.Freight) + sum(od.UnitPrice * od.Quantity * (1-od.Discount)) as OrderValue
+from [Order Details] od
+join Orders o on od.OrderID = o.OrderID and year(o.OrderDate) = 1997
+group by o.OrderID, o.EmployeeID
+)
+
+select e.FirstName, e.LastName, sum(ov.OrderValue) as OrdersValue,
+(select top 1 o.OrderDate from Orders o where o.EmployeeID = e.EmployeeID order by o.OrderDate desc) as LastOrderDate
+from Employees e
+join OrdersValues ov on e.EmployeeID = ov.EmployeeID
+where e.EmployeeID not in (select distinct s.EmployeeID from Employees e join Employees s on e.ReportsTo = s.EmployeeID)
+group by e.EmployeeID, e.FirstName, e.LastName
+order by 3 desc;
 ```
 
 ## Library
@@ -286,24 +359,106 @@ oraz datę ostatnio obsłużonego zamówienia
 * Dla każdego dorosłego członka biblioteki podaj jego imię, nazwisko oraz liczbę jego dzieci.
 
 ```sql
+with AdultChildrenCount as (
+  select adult_member_no, count(*) as ChildrenCount
+  from juvenile j 
+  group by adult_member_no
+)
+
+select m.firstname, m.lastname, isnull(ac.ChildrenCount, 0) as ChildrenCount from adult a 
+left join AdultChildrenCount ac on a.member_no = ac.adult_member_no
+join [member] m on a.member_no = m.member_no;
 ```
 
 * Dla każdego dorosłego członka biblioteki podaj jego imię, nazwisko, liczbę jego dzieci, liczbę zarezerwowanych książek oraz liczbę wypożyczonych książek.
 
 ```sql
+with AdultChildrenCount as (
+  select adult_member_no, count(*) as ChildrenCount
+  from juvenile j 
+  group by adult_member_no
+),
+AdultReservationCount as (
+  select member_no, count(*) as ReservationCount
+  from reservation r
+  group by member_no
+),
+AdultLoanCount as (
+  select member_no, count(*) as LoanCount
+  from loan l
+  group by member_no
+)
+
+select member_no, m.firstname, m.lastname,
+isnull(ac.ChildrenCount, 0) as ChildrenCount,
+isnull(ar.ReservationCount, 0) as ReservationCount,
+isnull(al.LoanCount, 0) as LoanCount
+from adult a 
+left join AdultChildrenCount ac on a.member_no = ac.adult_member_no
+left join AdultReservationCount ar on a.member_no = ar.member_no
+left join AdultLoanCount al on a.member_no = al.member_no
+join [member] m on a.member_no = m.member_no;
 ```
 
-* Dla każdego dorosłego członka biblioteki podaj jego imię, nazwisko, liczbę jego dzieci, oraz liczbę książek zarezerwowanych i wypożyczonych przez niego i jego dzieci.
+* Dla każdego dorosłego członka biblioteki podaj jego imię, nazwisko, liczbę jego dzieci,
+ oraz liczbę książek zarezerwowanych i wypożyczonych przez niego i jego dzieci.
 
 ```sql
+with AdultChildrenCount as (
+  select j.adult_member_no, count(*) as ChildrenCount
+  from juvenile j 
+  group by j.adult_member_no
+),
+ReservationCount as (
+  select r.member_no, count(*) as ReservationCount
+  from reservation r
+  group by r.member_no
+),
+LoanCount as (
+  select l.member_no, count(*) as LoanCount
+  from loan l
+  group by l.member_no
+)
+
+select m.member_no, m.firstname, m.lastname,
+isnull(ac.ChildrenCount, 0) as ChildrenCount,
+isnull(rc.ReservationCount, 0) +
+isnull(lc.LoanCount, 0) + isnull((
+  select sum(rc2.ReservationCount + lc2.LoanCount)
+  from juvenile j
+  left join ReservationCount rc2 on j.member_no = rc2.member_no
+  left join LoanCount lc2 on j.member_no = lc2.member_no
+  where j.adult_member_no = a.member_no
+), 0) as ReservationsAndLoansCount
+from adult a 
+left join AdultChildrenCount ac on a.member_no = ac.adult_member_no
+left join ReservationCount rc on a.member_no = rc.member_no
+left join LoanCount lc on a.member_no = lc.member_no
+join [member] m on a.member_no = m.member_no;
 ```
 
 * Dla każdego tytułu książki podaj ile razy ten tytuł był wypożyczany w 2001r
 
 ```sql
+select t.title, count(*) as loans from title t
+join loanhist l on t.title_no = l.title_no and year(l.out_date) = 2001
+group by t.title_no, t.title;
 ```
 
 * Dla każdego tytułu książki podaj ile razy ten tytuł był wypożyczany w 2002r
 
 ```sql
+select t.title,
+(
+  select count(*) as histsum from loanhist l
+  where t.title_no = l.title_no and year(l.out_date) = 2002
+  group by l.title_no
+) +
+(
+  select count(*) as currentsum from loan l 
+  where t.title_no = l.title_no and year(l.out_date) = 2002
+  group by l.title_no
+) as Loans
+from title t
+order by 2 desc;
 ```
