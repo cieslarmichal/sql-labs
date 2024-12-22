@@ -297,7 +297,7 @@ group by e.EmployeeID, e.FirstName, e.LastName
 order by 3 desc;
 ```
 
-* Który z pracowników był najaktywniejszy (obsłużył zamówienia o największej wartości) w 1997r, podaj imię i nazwisko takiego pracownika 
+* Który z pracowników był najaktywniejszy (obsłużył zamówienia o największej wartości) w 1997r, podaj imię i nazwisko takiego pracownika
 oraz datę ostatnio obsłużonego zamówienia
 
 ```sql
@@ -352,6 +352,26 @@ join OrdersValues ov on e.EmployeeID = ov.EmployeeID
 where e.EmployeeID not in (select distinct s.EmployeeID from Employees e join Employees s on e.ReportsTo = s.EmployeeID)
 group by e.EmployeeID, e.FirstName, e.LastName
 order by 3 desc;
+```
+
+* Dla każdego klienta podaj liczbę zamówień oraz wartość zamówień (wraz z opłatą za przesyłkę)
+złożonych prze tego klienta w marcu 1997. Dla klientów, którzy nie złożyli w tym czasie żadnych
+zamówień należy wyświetlić wartość 0. Zbiór wynikowy powinien zawierać nazwę klienta, oraz liczbę i
+wartość zamówień. Uporządkuj wynik wg nazwy klienta.
+
+```sql
+select c.CompanyName,
+ isnull(sum(od.unitprice * od.quantity * (1 - od.discount)), 0) +
+   isnull((select sum(o2.Freight)
+    from Orders o2
+    where o2.CustomerID = c.CustomerID and month(o2.OrderDate) = 3 and year(o2.OrderDate) = 1997), 0) as [orders value],
+ (select count(*) from Orders o3 where o3.CustomerID = c.CustomerID and month(o3.OrderDate) = 3 and year(o3.OrderDate) = 1997) as [orders count]
+from Customers c
+left join Orders o on o.CustomerID = c.CustomerId and month(o.orderDate) = 3 and year(o.OrderDate) = 1997
+left join [Order Details] od on od.OrderID = o.OrderID
+group by c.CustomerID,
+         c.CompanyName
+order by 1;
 ```
 
 ## Library
